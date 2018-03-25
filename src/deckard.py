@@ -1,9 +1,31 @@
 #!/usr/bin/env python3
 
-import sys
 import IPython
 
+import sys
+import json
 import androguard.misc
+
+from astparse import traverseAST, ParameterType
+
+def get_pkg_names(ast):
+    pkgnames = set()
+    invocations = traverseAST(ast)
+
+    strcomps = [x for x in invocations
+                if x.triple == ('java/lang/String', 'equals', '(Ljava/lang/Object;)Z')]
+    for c in strcomps:
+        litval, ispkgcheck = None, None
+        for p in c.params:
+            if p.ptype == ParameterType.LITERAL:
+                litval = p.value
+            elif p.ptype == ParameterType.FIELD and \
+                 p.triple == ('de/robv/android/xposed/callbacks/XC_LoadPackage$LoadPackageParam',\
+                              'packageName', 'Ljava/lang/String;'):
+                ispkgcheck = True
+        if litval and ispkgcheck:
+            pkgnames.add(litval)
+    return list(pkgnames)
 
 def to_dalvik_notation(name):
     return "L{0};".format(name.replace(".", "/"))
@@ -33,10 +55,10 @@ def analyze(filename):
     ma = dx.get_method(mca.get_method())
 
     dec = androguard.decompiler.dad.decompile.DvMethod(ma)
-    dec.process()
+    dec.process(doAST=True)
 
-    IPython.embed()
-
+    pkgnames = get_pkg_names(dec.ast)
+    print("Detected package names", pkgnames)
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
