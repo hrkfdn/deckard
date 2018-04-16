@@ -1,38 +1,66 @@
 from enum import Enum
 
-class ParameterType(Enum):
-    OTHER = 0
-    LITERAL = 1
-    FIELD = 2
-
-class Parameter:
-    def __init__(self, data):
-        self.ptype = ParameterType.OTHER
-        self.value = data[1]
-        self.literaltype = None
-        self.triple = None
-
-        if data[0] == "Literal":
-            self.ptype = ParameterType.LITERAL
-            self.literaltype = data[2]
-        elif data[0] == "FieldAccess":
-            self.ptype = ParameterType.FIELD
-            self.triple = data[2]
-        else:
-            self.ptype = ParameterType.OTHER
-
+class Literal:
+    def __init__(self, node):
+        self.value = parse_expression(node[1])
     def __str__(self):
-        return "Parameter: {0} ({1}) [{2} {3}]".format(self.value,
-                                                       self.triple,
-                                                       self.ptype,
-                                                       self.literaltype)
+        return "Literal: " + str(self.value)
 
-class Invocation:
+class Identifier:
+    def __init__(self, node):
+        self.name = node[1]
+    def __str__(self):
+        return "Local: " + self.name
+
+class TypeName:
+    def __init__(self, node):
+        assert(node[0] == "TypeName")
+        self.name = node[1][0]
+
+class FieldAccess:
+    def __init__(self, node):
+        assert(node[0] == "FieldAccess")
+        self.field = parse_expression(node[1])
+
+class ArrayAccess:
+    def __init__(self, node):
+        assert(node[0] == "ArrayAccess")
+        self.array = parse_expression(node[1])
+
+def parse_expression(node):
+    if type(node) == list:
+        if node[0] == "ArrayAccess":
+            return ArrayAccess(node)
+        elif node[0] == "Literal":
+            return Literal(node)
+        elif node[0] == "FieldAccess":
+            return FieldAccess(node)
+        elif node[0] == "Local":
+            return Identifier(node)
+        elif node[0] == "TypeName":
+            return TypeName(node)
+        elif node[0] == "MethodInvocation":
+            return MethodInvocation(node)
+    return node
+
+class Assignment:
     def __init__(self, data):
-        if data[0] != "MethodInvocation":
-            raise ValueError("Supplied data is no MethodInvocation object")
+        print("Assignment()", data)
+        self.lhs = parse_expression(data[1][0])
+        self.rhs = parse_expression(data[1][1])
+        print(self.lhs, "=", self.rhs)
 
-        self.params = [Parameter(x) for x in data[1]]
+    def __hash__(self):
+        return hash(self.lhs)
+
+    def __eq__(self, other):
+        return isinstance(Assignment) and \
+            other.lhs == self.lhs and other.rhs == self.rhs
+
+class MethodInvocation:
+    def __init__(self, data):
+        assert(data[0] == "MethodInvocation")
+        self.params = [parse_expression(x) for x in data[1]]
         self.triple = data[2]
         self.name = data[3]
         self.base = data[4]
@@ -40,30 +68,11 @@ class Invocation:
     def __str__(self):
         return "Invocation: " + str(self.triple)
 
-def get_invocations(graph):
-    invocations = []
-    stack = [x for x in graph]
+def dfs(graph, callback):
+    stack = [x for x in reversed(graph)]
     while stack:
-        vertex = stack.pop()
-        if type(vertex) is list and len(vertex) > 0:
-            if vertex[0] == "MethodInvocation":
-                invocations.append(Invocation(vertex))
-            else:
-                stack.extend(vertex)
-    return invocations
-
-def traverseAST(ast):
-    # handleLoadPackage method signature is predefined, grab parameter
-    # variable name so we can identify it in the AST
-    firstparam = ast['params'][0]
-    for node in firstparam:
-        if node[0] == "TypeName" and \
-           "de/robv/android/xposed/callbacks/XC_LoadPackage$LoadPackageParam" not in node[1]:
-            print("First parameter is not of type LoadPackageParam, aborting")
-            sys.exit(1)
-        if node[0] == "Local":
-            paramvar = node[1]
-
-    #print("LoadPackageParam is named", paramvar)
-
-    return get_invocations(ast['body'])
+        node = stack.pop()
+        if type(node) is list and len(node) > 0:
+            # if callback returns False, don't go deeper
+            if callback(node):
+                stack.extend(reversed(node))

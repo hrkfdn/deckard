@@ -6,7 +6,7 @@ import sys
 import json
 import androguard.misc
 
-from astparse import traverseAST, ParameterType
+import astparse
 
 def get_pkg_names(ast):
     pkgnames = set()
@@ -30,6 +30,36 @@ def get_pkg_names(ast):
 def to_dalvik_notation(name):
     return "L{0};".format(name.replace(".", "/"))
 
+def analyze_method(method):
+    invocations = []
+    assignments = {}
+
+    def dfs_callback(node):
+        if node[0] == "MethodInvocation":
+            invocations.append(astparse.MethodInvocation(node))
+            return False
+        elif node[0] == "Assignment":
+            print(node)
+            assignment = astparse.Assignment(node)
+            print("lhs:", assignment.lhs)
+            print("rhs:", assignment.rhs)
+            assignments[assignment.lhs] = assignment
+
+        return True
+
+    decompiler = androguard.decompiler.dad.decompile.DvMethod(method)
+    decompiler.process(doAST=True)
+    ast = decompiler.ast
+
+    astparse.dfs(ast['body'], dfs_callback)
+
+    print("Function calls in", method)
+    for i in invocations:
+        print(i)
+        print("\tParameters")
+        for p in i.params:
+            print("\t\t", p)
+
 def analyze(filename):
     print("Analyzing", filename)
     a, d, dx = androguard.misc.AnalyzeAPK(filename)
@@ -38,27 +68,33 @@ def analyze(filename):
         print("Could not analyze..")
         return
 
-    try:
-        epclass = a.get_file("assets/xposed_init")
-        epclass = epclass.decode("utf-8").split()[0]
-    except FileNotPresent as e:
-        print("File has no Xposed entrypoint")
+    cls = dx.get_class_analysis("Lde/robv/android/xposed/XposedHelpers;")
+    if not cls:
+        print("No reference to Xposed found. Is this an Xposed module?")
         return
 
-    print("Xposed entrypoint:", epclass)
+    clsparam = dx.get_method_analysis_by_name(cls.get_vm_class().get_name(),
+                                              "findAndHookMethod",
+                                              "(Ljava/lang/Class; Ljava/lang/String; [Ljava/lang/Object;)Lde/robv/android/xposed/XC_MethodHook$Unhook;")
+    strparam = dx.get_method_analysis_by_name(cls.get_vm_class().get_name(),
+                                              "findAndHookMethod",
+                                              "(Ljava/lang/String; Ljava/lang/ClassLoader; Ljava/lang/String; [Ljava/lang/Object;)Lde/robv/android/xposed/XC_MethodHook$Unhook;")
+    if not (clsparam or strparam):
+        print("No references to findAndHookMethod() found")
+        return
 
-    cls_analysis = dx.get_class_analysis(to_dalvik_notation(epclass))
+    # gather all methods referencing findAndHookMethod() and store them in a set
+    methods = set()
+    xrefs = []
+    if strparam: xrefs.extend(strparam.get_xref_from())
+    if clsparam: xrefs.extend(clsparam.get_xref_from())
 
-    mca = dx.get_method_analysis_by_name(cls_analysis.get_vm_class().get_name(),
-                                         "handleLoadPackage",
-                                         "(Lde/robv/android/xposed/callbacks/XC_LoadPackage$LoadPackageParam;)V")
-    ma = dx.get_method(mca.get_method())
+    for xref in xrefs:
+        (xref_class, xref_method, xref_offset) = xref
+        methods.add(dx.get_method(xref_method))
 
-    dec = androguard.decompiler.dad.decompile.DvMethod(ma)
-    dec.process(doAST=True)
-
-    pkgnames = get_pkg_names(dec.ast)
-    print("Detected package names", pkgnames)
+    for m in methods:
+        analyze_method(m)
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
