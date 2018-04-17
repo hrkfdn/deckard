@@ -8,6 +8,12 @@ import androguard.misc
 
 import astparse
 
+def resolve_identifier(context, identifier):
+    start = identifier
+    while str(start) in context:
+        start = context.get(str(start))
+    return start
+
 def analyze_method(method):
     invocations = []
     context = {}
@@ -18,10 +24,12 @@ def analyze_method(method):
             return False
         if node[0] == "LocalDeclarationStatement":
             decl = astparse.LocalDeclarationStatement(node)
-            context[decl.name] = decl
+            context[str(decl.name)] = decl.value
+            return False
         elif node[0] == "Assignment":
             assignment = astparse.Assignment(node)
-            context[assignment.lhs] = assignment
+            context[str(assignment.lhs)] = assignment.rhs
+            return False
 
         return True
 
@@ -35,15 +43,26 @@ def analyze_method(method):
 
     astparse.dfs(ast['body'], dfs_callback)
 
-    print("Function calls in", method)
-    for i, a in invocations:
-        print(i)
-        print("\tParameters:")
-        for p in i.params:
-            print("\t\t", p)
-        print("\tContext:")
-        for k, v in a.items():
-            print("\t\t", v)
+    for inv, ctx in invocations:
+        if type(inv.base) is astparse.TypeName and \
+           inv.base.name == "de/robv/android/xposed/XposedHelpers" and \
+           inv.name == "findAndHookMethod":
+            # hook objects are passed as an Object array of N elements.
+            # where N-1 elements are the classes of the target function's parameters
+            # and the last/N-th element contains the XC_MethodHook instance, which
+            # we are trying to extract.
+            hook_array = inv.params[-1]
+            hook_array_size = ctx[str(hook_array)].param.value
+            hook_obj_identifier = "{0}[{1}]".format(hook_array, int(hook_array_size)-1)
+            hook_obj = ctx[hook_obj_identifier]
+
+            print("Hook information:")
+            print("\tTarget class:", resolve_identifier(ctx, inv.params[0]))
+            print("\tMethod name:", inv.params[-2])
+            print("\tHook object:", resolve_identifier(ctx, hook_obj_identifier))
+            #print("Context:")
+            #for k, v in ctx.items():
+            #    print("\t", k, "=", v)
 
 def analyze(filename):
     print("Analyzing", filename)

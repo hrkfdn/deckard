@@ -11,20 +11,27 @@ class Literal:
     def __init__(self, node):
         assert(node[0] == "Literal")
         self.value = parse_expression(node[1])
+    @classmethod
+    def fromprimitive(cls, value):
+        return cls(["Literal", str(value)])
     def __str__(self):
-        return "Literal: " + str(self.value)
+        return str(self.value)
 
 class Local:
     def __init__(self, node):
         assert(node[0] == "Local")
         self.name = node[1]
+    def __hash__(self):
+        return hash(self.name)
+    def __eq__(self, other):
+        return isinstance(other, Local) and self.name == other.name
     def __str__(self):
-        return "Local: " + self.name
+        return self.name
 
 class TypeName:
     def __init__(self, node):
         assert(node[0] == "TypeName")
-        self.name = node[1][0].replace("/", ".")
+        self.name = node[1][0]
     def __str__(self):
         return "Type: " + self.name
 
@@ -41,8 +48,16 @@ class ArrayAccess:
         assert(node[0] == "ArrayAccess")
         self.array = parse_expression(node[1][0])
         self.index = parse_expression(node[1][1])
+    @classmethod
+    def fromobj(cls, array, index):
+        return cls(["ArrayAccess", [array, index]])
+    def __hash__(self):
+        return hash(self.array) + hash(self.index)
+    def __eq__(self, other):
+        return isinstance(other, ArrayAccess) and \
+            self.array == other.array and self.index == other.index
     def __str__(self):
-        return "Array: {0}[{1}]".format(self.array, self.index)
+        return "{0}[{1}]".format(self.array, self.index)
 
 class ArrayCreation:
     def __init__(self, node):
@@ -89,7 +104,7 @@ class Assignment:
         return hash(self.lhs)
 
     def __eq__(self, other):
-        return isinstance(Assignment) and \
+        return isinstance(other, Assignment) and \
             other.lhs == self.lhs and other.rhs == self.rhs
 
     def __str__(self):
@@ -102,7 +117,7 @@ class LocalDeclarationStatement:
         self.type = parse_expression(node[2][0])
         self.name = parse_expression(node[2][1])
     def __str__(self):
-        return "Declaration: {0} {1} := {2}".format(self.type, self.name, self.value)
+        return "{0} {1} := {2}".format(self.type, self.name, self.value)
 
 class MethodInvocation:
     def __init__(self, node):
