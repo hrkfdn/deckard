@@ -8,42 +8,20 @@ import androguard.misc
 
 import astparse
 
-def get_pkg_names(ast):
-    pkgnames = set()
-    invocations = traverseAST(ast)
-
-    strcomps = [x for x in invocations
-                if x.triple == ('java/lang/String', 'equals', '(Ljava/lang/Object;)Z')]
-    for c in strcomps:
-        litval, ispkgcheck = None, None
-        for p in c.params:
-            if p.ptype == ParameterType.LITERAL:
-                litval = p.value
-            elif p.ptype == ParameterType.FIELD and \
-                 p.triple == ('de/robv/android/xposed/callbacks/XC_LoadPackage$LoadPackageParam',\
-                              'packageName', 'Ljava/lang/String;'):
-                ispkgcheck = True
-        if litval and ispkgcheck:
-            pkgnames.add(litval)
-    return list(pkgnames)
-
-def to_dalvik_notation(name):
-    return "L{0};".format(name.replace(".", "/"))
-
 def analyze_method(method):
     invocations = []
-    assignments = {}
+    context = {}
 
     def dfs_callback(node):
         if node[0] == "MethodInvocation":
-            invocations.append(astparse.MethodInvocation(node))
+            invocations.append((astparse.MethodInvocation(node), context))
             return False
+        if node[0] == "LocalDeclarationStatement":
+            decl = astparse.LocalDeclarationStatement(node)
+            context[decl.name] = decl
         elif node[0] == "Assignment":
-            print(node)
             assignment = astparse.Assignment(node)
-            print("lhs:", assignment.lhs)
-            print("rhs:", assignment.rhs)
-            assignments[assignment.lhs] = assignment
+            context[assignment.lhs] = assignment
 
         return True
 
@@ -51,14 +29,21 @@ def analyze_method(method):
     decompiler.process(doAST=True)
     ast = decompiler.ast
 
+    for p in ast["params"]:
+        param = astparse.Parameter(p)
+        context[param.name] = param
+
     astparse.dfs(ast['body'], dfs_callback)
 
     print("Function calls in", method)
-    for i in invocations:
+    for i, a in invocations:
         print(i)
-        print("\tParameters")
+        print("\tParameters:")
         for p in i.params:
             print("\t\t", p)
+        print("\tContext:")
+        for k, v in a.items():
+            print("\t\t", v)
 
 def analyze(filename):
     print("Analyzing", filename)
