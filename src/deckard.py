@@ -58,7 +58,7 @@ def analyze_method(method):
 
             print("Hook information:")
             print("\tTarget class:", resolve_identifier(ctx, inv.params[0]))
-            print("\tMethod name:", inv.params[-2])
+            print("\tMethod name:", resolve_identifier(ctx, inv.params[-2]))
             print("\tHook object:", resolve_identifier(ctx, hook_obj_identifier))
             #print("Context:")
             #for k, v in ctx.items():
