@@ -74,26 +74,6 @@ class Parameter:
     def __str__(self):
         return "Param: {0} {1}".format(self.type, self.name)
 
-def parse_expression(node):
-    if type(node) == list:
-        if node[0] == "ArrayAccess":
-            return ArrayAccess(node)
-        elif node[0] == "ArrayCreation":
-            return ArrayCreation(node)
-        elif node[0] == "ClassInstanceCreation":
-            return ClassInstanceCreation(node)
-        elif node[0] == "Literal":
-            return Literal(node)
-        elif node[0] == "FieldAccess":
-            return FieldAccess(node)
-        elif node[0] == "Local":
-            return Local(node)
-        elif node[0] == "TypeName":
-            return TypeName(node)
-        elif node[0] == "MethodInvocation":
-            return MethodInvocation(node)
-    return node
-
 class Assignment:
     def __init__(self, node):
         assert(node[0] == "Assignment")
@@ -130,7 +110,41 @@ class MethodInvocation:
     def __str__(self):
         return "Invocation: {0}.{1}()".format(self.base, self.name)
 
+def parse_expression(node):
+    """
+    Returns an instance representing the current 'node' object from
+    the AST. If there is no appropriate class, the node itself is returned.
+    """
+
+    if type(node) == list:
+        if node[0] == "ArrayAccess":
+            return ArrayAccess(node)
+        elif node[0] == "ArrayCreation":
+            return ArrayCreation(node)
+        elif node[0] == "ClassInstanceCreation":
+            return ClassInstanceCreation(node)
+        elif node[0] == "Literal":
+            return Literal(node)
+        elif node[0] == "FieldAccess":
+            return FieldAccess(node)
+        elif node[0] == "Local":
+            return Local(node)
+        elif node[0] == "TypeName":
+            return TypeName(node)
+        elif node[0] == "MethodInvocation":
+            return MethodInvocation(node)
+    return node
+
+
 def dfs(graph, callback):
+
+    """
+    Perform a deph-first-search (DFS) on a 'graph' object
+
+    Calls 'callback(node)' function for every node
+    If callback returns False, the algorithm won't dive deeper
+    into the current node.
+    """
     stack = [x for x in reversed(graph)]
     while stack:
         node = stack.pop()

@@ -9,12 +9,18 @@ import androguard.misc
 import astparse
 
 def resolve_identifier(context, identifier):
+    """
+    Recursively resolves identifiers defined in 'context'
+    """
     start = identifier
     while str(start) in context:
         start = context.get(str(start))
     return start
 
 def analyze_method(method):
+    """
+    Analyze Androguard MethodAnalysis object in 'method' for Xposed hooks
+    """
     invocations = []
     context = {}
 
@@ -65,6 +71,9 @@ def analyze_method(method):
             #    print("\t", k, "=", v)
 
 def analyze(filename):
+    """
+    Analyze an APK file located at 'filename'
+    """
     print("Analyzing", filename)
     a, d, dx = androguard.misc.AnalyzeAPK(filename)
 
@@ -98,6 +107,7 @@ def analyze(filename):
         methods.add(dx.get_method(xref_method))
 
     for m in methods:
+        print("Analyzing", m)
         analyze_method(m)
 
 if __name__ == "__main__":
