@@ -60,12 +60,16 @@ def analyze_method(method):
             hook_array = inv.params[-1]
             hook_array_size = ctx[str(hook_array)].param.value
             hook_obj_identifier = "{0}[{1}]".format(hook_array, int(hook_array_size)-1)
-            hook_obj = ctx[hook_obj_identifier]
+            hook_obj = resolve_identifier(ctx, hook_obj_identifier)
+
+            # get hook class if referenced directly in a class instance creation
+            if isinstance(hook_obj, astparse.ClassInstanceCreation):
+                hook_obj = hook_obj.type
 
             print("Hook information:")
             print("\tTarget class:", resolve_identifier(ctx, inv.params[0]))
             print("\tMethod name:", resolve_identifier(ctx, inv.params[-2]))
-            print("\tHook object:", resolve_identifier(ctx, hook_obj_identifier))
+            print("\tHook object:", hook_obj)
             #print("Context:")
             #for k, v in ctx.items():
             #    print("\t", k, "=", v)
@@ -75,7 +79,10 @@ def analyze(filename):
     Analyze an APK file located at 'filename'
     """
     print("Analyzing", filename)
-    a, d, dx = androguard.misc.AnalyzeAPK(filename)
+    if filename.endswith(".dex"):
+        a, d, dx = androguard.misc.AnalyzeDex(filename)
+    else:
+        a, d, dx = androguard.misc.AnalyzeAPK(filename)
 
     if not (a and d and dx):
         print("Could not analyze..")
