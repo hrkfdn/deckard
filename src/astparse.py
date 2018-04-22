@@ -108,7 +108,7 @@ class MethodInvocation:
         self.name = node[3]
 
     def __str__(self):
-        return "Invocation: {0}.{1}()".format(self.base, self.name)
+        return "Invocation: {0}.{1}({2})".format(self.base, self.name, ",".join(str(x) for x in self.params))
 
 def parse_expression(node):
     """
