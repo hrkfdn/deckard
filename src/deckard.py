@@ -70,6 +70,9 @@ def analyze_method(method):
             print("\tTarget class:", resolve_identifier(ctx, inv.params[0]))
             print("\tMethod name:", resolve_identifier(ctx, inv.params[-2]))
             print("\tHook object:", hook_obj)
+
+            if input("Launch debug shell? [y/n] ").startswith("y"):
+                IPython.embed()
             #print("Context:")
             #for k, v in ctx.items():
             #    print("\t", k, "=", v)
