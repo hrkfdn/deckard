@@ -45,7 +45,7 @@ def analyze_method(method):
 
     for p in ast["params"]:
         param = astparse.Parameter(p)
-        context[param.name] = param
+        context[str(param.name)] = param
 
     astparse.dfs(ast['body'], dfs_callback)
 
