@@ -39,7 +39,7 @@ class FieldAccess:
     def __init__(self, node):
         assert(node[0] == "FieldAccess")
         self.type = parse_expression(node[1][0])
-        self.field = ".".join(x for x in node[2] if x)
+        self.field = ".".join(x for x in node[2][:-1] if x)
     def __str__(self):
         return "Field: {0}".format(self.field)
 
