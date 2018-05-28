@@ -52,7 +52,8 @@ def analyze_method(method):
     for inv, ctx in invocations:
         if type(inv.base) is astparse.TypeName and \
            inv.base.name == "de/robv/android/xposed/XposedHelpers" and \
-           inv.name == "findAndHookMethod":
+           (inv.name == "findAndHookMethod" or \
+            inv.name == "findAndHookConstructor"):
             # hook objects are passed as an Object array of N elements.
             # where N-1 elements are the classes of the target function's parameters
             # and the last/N-th element contains the XC_MethodHook instance, which
@@ -67,8 +68,10 @@ def analyze_method(method):
                 hook_obj = hook_obj.type
 
             print("Hook information:")
+            print("\tMethod:", inv.name)
             print("\tTarget class:", resolve_identifier(ctx, inv.params[0]))
-            print("\tMethod name:", resolve_identifier(ctx, inv.params[-2]))
+            if inv.name == "findAndHookMethod":
+                print("\tMethod name:", resolve_identifier(ctx, inv.params[-2]))
             print("\tHook object:", hook_obj)
 
             if input("Launch debug shell? [y/n] ").startswith("y"):
@@ -96,21 +99,29 @@ def analyze(filename):
         print("No reference to Xposed found. Is this an Xposed module?")
         return
 
-    clsparam = dx.get_method_analysis_by_name(cls.get_vm_class().get_name(),
+    m_clsparam = dx.get_method_analysis_by_name(cls.get_vm_class().get_name(),
                                               "findAndHookMethod",
                                               "(Ljava/lang/Class; Ljava/lang/String; [Ljava/lang/Object;)Lde/robv/android/xposed/XC_MethodHook$Unhook;")
-    strparam = dx.get_method_analysis_by_name(cls.get_vm_class().get_name(),
+    m_strparam = dx.get_method_analysis_by_name(cls.get_vm_class().get_name(),
                                               "findAndHookMethod",
                                               "(Ljava/lang/String; Ljava/lang/ClassLoader; Ljava/lang/String; [Ljava/lang/Object;)Lde/robv/android/xposed/XC_MethodHook$Unhook;")
-    if not (clsparam or strparam):
+    c_clsparam = dx.get_method_analysis_by_name(cls.get_vm_class().get_name(),
+                                                "findAndHookConstructor",
+                                                "(Ljava/lang/Class; [Ljava/lang/Object;)Lde/robv/android/xposed/XC_MethodHook$Unhook;")
+    c_strparam = dx.get_method_analysis_by_name(cls.get_vm_class().get_name(),
+                                                "findAndHookConstructor",
+                                                "(Ljava/lang/String; Ljava/lang/ClassLoader; [Ljava/lang/Object;)Lde/robv/android/xposed/XC_MethodHook$Unhook;")
+
+    if not (m_clsparam or m_strparam):
         print("No references to findAndHookMethod() found")
-        return
+    if not (c_clsparam or c_strparam):
+        print("No references to findAndHookConstructor() found")
 
     # gather all methods referencing findAndHookMethod() and store them in a set
     methods = set()
     xrefs = []
-    if strparam: xrefs.extend(strparam.get_xref_from())
-    if clsparam: xrefs.extend(clsparam.get_xref_from())
+    for x in [m_strparam, m_clsparam, c_strparam, c_clsparam]:
+        if x: xrefs.extend(x.get_xref_from())
 
     for xref in xrefs:
         (xref_class, xref_method, xref_offset) = xref
