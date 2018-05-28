@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
-import IPython
-
 import sys
-import json
+
+import IPython
 import androguard.misc
 
 import astparse
+
 
 def resolve_identifier(context, identifier):
     """
@@ -16,6 +16,7 @@ def resolve_identifier(context, identifier):
     while str(start) in context:
         start = context.get(str(start))
     return start
+
 
 def analyze_method(method):
     """
@@ -51,16 +52,15 @@ def analyze_method(method):
 
     for inv, ctx in invocations:
         if type(inv.base) is astparse.TypeName and \
-           inv.base.name == "de/robv/android/xposed/XposedHelpers" and \
-           (inv.name == "findAndHookMethod" or \
-            inv.name == "findAndHookConstructor"):
+                inv.base.name == "de/robv/android/xposed/XposedHelpers" and \
+                (inv.name == "findAndHookMethod" or inv.name == "findAndHookConstructor"):
             # hook objects are passed as an Object array of N elements.
             # where N-1 elements are the classes of the target function's parameters
             # and the last/N-th element contains the XC_MethodHook instance, which
             # we are trying to extract.
             hook_array = inv.params[-1]
             hook_array_size = ctx[str(hook_array)].param.value
-            hook_obj_identifier = "{0}[{1}]".format(hook_array, int(hook_array_size)-1)
+            hook_obj_identifier = "{0}[{1}]".format(hook_array, int(hook_array_size) - 1)
             hook_obj = resolve_identifier(ctx, hook_obj_identifier)
 
             # get hook class if referenced directly in a class instance creation
@@ -76,9 +76,10 @@ def analyze_method(method):
 
             if input("Launch debug shell? [y/n] ").startswith("y"):
                 IPython.embed()
-            #print("Context:")
-            #for k, v in ctx.items():
+            # print("Context:")
+            # for k, v in ctx.items():
             #    print("\t", k, "=", v)
+
 
 def analyze(filename):
     """
@@ -100,17 +101,21 @@ def analyze(filename):
         return
 
     m_clsparam = dx.get_method_analysis_by_name(cls.get_vm_class().get_name(),
-                                              "findAndHookMethod",
-                                              "(Ljava/lang/Class; Ljava/lang/String; [Ljava/lang/Object;)Lde/robv/android/xposed/XC_MethodHook$Unhook;")
+                                                "findAndHookMethod",
+                                                "(Ljava/lang/Class; Ljava/lang/String; "
+                                                "[Ljava/lang/Object;)Lde/robv/android/xposed/XC_MethodHook$Unhook;")
     m_strparam = dx.get_method_analysis_by_name(cls.get_vm_class().get_name(),
-                                              "findAndHookMethod",
-                                              "(Ljava/lang/String; Ljava/lang/ClassLoader; Ljava/lang/String; [Ljava/lang/Object;)Lde/robv/android/xposed/XC_MethodHook$Unhook;")
+                                                "findAndHookMethod",
+                                                "(Ljava/lang/String; Ljava/lang/ClassLoader; Ljava/lang/String; "
+                                                "[Ljava/lang/Object;)Lde/robv/android/xposed/XC_MethodHook$Unhook;")
     c_clsparam = dx.get_method_analysis_by_name(cls.get_vm_class().get_name(),
                                                 "findAndHookConstructor",
-                                                "(Ljava/lang/Class; [Ljava/lang/Object;)Lde/robv/android/xposed/XC_MethodHook$Unhook;")
+                                                "(Ljava/lang/Class; [Ljava/lang/Object;)Lde/robv/android/xposed"
+                                                "/XC_MethodHook$Unhook;")
     c_strparam = dx.get_method_analysis_by_name(cls.get_vm_class().get_name(),
                                                 "findAndHookConstructor",
-                                                "(Ljava/lang/String; Ljava/lang/ClassLoader; [Ljava/lang/Object;)Lde/robv/android/xposed/XC_MethodHook$Unhook;")
+                                                "(Ljava/lang/String; Ljava/lang/ClassLoader; "
+                                                "[Ljava/lang/Object;)Lde/robv/android/xposed/XC_MethodHook$Unhook;")
 
     if not (m_clsparam or m_strparam):
         print("No references to findAndHookMethod() found")
@@ -121,7 +126,8 @@ def analyze(filename):
     methods = set()
     xrefs = []
     for x in [m_strparam, m_clsparam, c_strparam, c_clsparam]:
-        if x: xrefs.extend(x.get_xref_from())
+        if x:
+            xrefs.extend(x.get_xref_from())
 
     for xref in xrefs:
         (xref_class, xref_method, xref_offset) = xref
@@ -130,6 +136,7 @@ def analyze(filename):
     for m in methods:
         print("Analyzing", m)
         analyze_method(m)
+
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
