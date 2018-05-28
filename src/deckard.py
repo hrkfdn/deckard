@@ -5,6 +5,7 @@ import sys
 import IPython
 import androguard.misc
 
+import analysis
 import astparse
 
 
@@ -22,6 +23,7 @@ def analyze_method(method):
     """
     Analyze Androguard MethodAnalysis object in 'method' for Xposed hooks
     """
+    hooks = []
     invocations = []
     context = {}
 
@@ -67,18 +69,30 @@ def analyze_method(method):
             if isinstance(hook_obj, astparse.ClassInstanceCreation):
                 hook_obj = hook_obj.type
 
-            print("Hook information:")
-            print("\tMethod:", inv.name)
-            print("\tTarget class:", resolve_identifier(ctx, inv.params[0]))
-            if inv.name == "findAndHookMethod":
-                print("\tMethod name:", resolve_identifier(ctx, inv.params[-2]))
-            print("\tHook object:", hook_obj)
+            # extract class names from calls to XposedHelpers.findClass(className, classLoader)
+            # a pattern common in Xposed module hooks
+            cls = resolve_identifier(ctx, inv.params[0])
+            if isinstance(cls, astparse.MethodInvocation) and isinstance(cls.base, astparse.TypeName):
+                if cls.base.name == "de/robv/android/xposed/XposedHelpers" and cls.name == "findClass":
+                    cls = cls.params[0]
+            # class literals
+            elif isinstance(cls, astparse.Literal) and isinstance(cls.value, astparse.TypeName):
+                cls = cls.value.name
 
-            if input("Launch debug shell? [y/n] ").startswith("y"):
-                IPython.embed()
+            targetmethod = resolve_identifier(ctx, inv.params[-2]) if inv.name == "findAndHookMethod" else None
+            if type(hook_obj) is not astparse.TypeName:
+                print("Callback object ({0}) is dynamic, skipping hook {1}#{2}".format(hook_obj, cls, targetmethod))
+                continue
+
+            callback = hook_obj.name
+
+            hook = analysis.Hook(cls, targetmethod, callback)
+
+            hooks.append(hook)
             # print("Context:")
             # for k, v in ctx.items():
             #    print("\t", k, "=", v)
+    return hooks
 
 
 def analyze(filename):
@@ -111,7 +125,7 @@ def analyze(filename):
     c_clsparam = dx.get_method_analysis_by_name(cls.get_vm_class().get_name(),
                                                 "findAndHookConstructor",
                                                 "(Ljava/lang/Class; [Ljava/lang/Object;)Lde/robv/android/xposed"
-                                                "/XC_MethodHook$Unhook;")
+                                                "/XC_MethodHook$Unhook;")  # XXX untested
     c_strparam = dx.get_method_analysis_by_name(cls.get_vm_class().get_name(),
                                                 "findAndHookConstructor",
                                                 "(Ljava/lang/String; Ljava/lang/ClassLoader; "
@@ -133,9 +147,12 @@ def analyze(filename):
         (xref_class, xref_method, xref_offset) = xref
         methods.add(dx.get_method(xref_method))
 
+    hooks = []
     for m in methods:
-        print("Analyzing", m)
-        analyze_method(m)
+        hooks.extend(analyze_method(m))
+
+    for h in hooks:
+        print(h)
 
 
 if __name__ == "__main__":
