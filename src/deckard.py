@@ -19,7 +19,9 @@ if __name__ == "__main__":
         print("File {0} does not exist".format(target))
         sys.exit(1)
 
-    hooks = static.analyze(sys.argv[1])
-    report = analysis.Report(target.name, hooks)
+    with open(target, "rb") as f:
+        filebuf = f.read()
+        hooks = static.analyze(target.name, filebuf)
+        report = analysis.Report(target.name, filebuf, hooks)
 
     report.save(reportpath / (target.name + ".report"))

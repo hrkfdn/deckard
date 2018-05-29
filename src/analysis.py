@@ -15,8 +15,9 @@ class Hook:
 
 
 class Report:
-    def __init__(self, name, hooks):
+    def __init__(self, name, file, hooks):
         self.name = name
+        self.file = file
         self.hooks = hooks
 
     def save(self, path):
