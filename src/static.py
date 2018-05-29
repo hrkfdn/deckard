@@ -1,4 +1,5 @@
 import androguard.misc
+import androguard.decompiler.dad.decompile
 
 import analysis
 import astparse
