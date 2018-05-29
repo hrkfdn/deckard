@@ -149,5 +149,4 @@ def analyze(filename):
     for m in methods:
         hooks.extend(analyze_method(m))
 
-    for h in hooks:
-        print(h)
+    return hooks
