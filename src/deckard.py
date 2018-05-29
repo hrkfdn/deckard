@@ -128,7 +128,7 @@ def analyze(filename):
     c_clsparam = dx.get_method_analysis_by_name(cls.get_vm_class().get_name(),
                                                 "findAndHookConstructor",
                                                 "(Ljava/lang/Class; [Ljava/lang/Object;)Lde/robv/android/xposed"
-                                                "/XC_MethodHook$Unhook;")  # XXX untested
+                                                "/XC_MethodHook$Unhook;")
     c_strparam = dx.get_method_analysis_by_name(cls.get_vm_class().get_name(),
                                                 "findAndHookConstructor",
                                                 "(Ljava/lang/String; Ljava/lang/ClassLoader; "
