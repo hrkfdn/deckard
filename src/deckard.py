@@ -16,6 +16,8 @@ def resolve_identifier(context, identifier):
     start = identifier
     while str(start) in context:
         start = context.get(str(start))
+    if type(start) is astparse.Literal:
+        start = start.value
     return start
 
 
@@ -74,10 +76,11 @@ def analyze_method(method):
             cls = resolve_identifier(ctx, inv.params[0])
             if isinstance(cls, astparse.MethodInvocation) and isinstance(cls.base, astparse.TypeName):
                 if cls.base.name == "de/robv/android/xposed/XposedHelpers" and cls.name == "findClass":
-                    cls = cls.params[0]
+                    # resolve parameter once more in case a local/variable was passed
+                    cls = resolve_identifier(ctx, cls.params[0])
             # class literals
-            elif isinstance(cls, astparse.Literal) and isinstance(cls.value, astparse.TypeName):
-                cls = cls.value.name
+            elif isinstance(cls, astparse.TypeName):
+                cls = cls.name
 
             targetmethod = resolve_identifier(ctx, inv.params[-2]) if inv.name == "findAndHookMethod" else None
             if type(hook_obj) is not astparse.TypeName:
