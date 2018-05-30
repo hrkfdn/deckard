@@ -106,16 +106,7 @@ def analyze_method(method):
     return hooks
 
 
-def analyze(filename, filebuf):
-    """
-    Analyze an APK file located at 'filename'
-    """
-    print("Analyzing", filename)
-    if filename.endswith(".dex"):
-        a, d, dx = androguard.misc.AnalyzeDex(filebuf)
-    else:
-        a, d, dx = androguard.misc.AnalyzeAPK(filebuf, raw=True)
-
+def analyze(a, d, dx):
     if not (a and d and dx):
         print("Could not analyze..")
         return

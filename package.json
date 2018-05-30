@@ -1,0 +1,12 @@
+{
+  "name": "deckard",
+  "version": "0.1",
+  "main": "src/deckard.py",
+  "repository": "git@github.com:hrkfdn/deckard.git",
+  "author": "Henrik Friedrichsen <henrik@affekt.org>",
+  "license": "GPLv2",
+  "private": true,
+  "dependencies": {
+    "bootstrap": "4.1.1"
+  }
+}

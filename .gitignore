@@ -1,3 +1,9 @@
+# yarn packages
+src/static/vendor
+
+# sass compilation output
+src/static/css
+
 # Virtual env
 venv/
 

@@ -3,25 +3,37 @@
 from pathlib import Path
 import sys
 
+from androguard import misc
+from androguard import session
+
 import analysis
 import static
+import webui
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("usage: {0} <path_to.[dex|apk]>".format(sys.argv[0]))
+    if len(sys.argv) < 3:
+        print("usage: {0} <static|dynamic|show> <path_to.apk|path_to.report>".format(sys.argv[0]))
         sys.exit(1)
 
     reportpath = Path(sys.path[0]).parent / "reports"
 
-    target = Path(sys.argv[1])
+    target = Path(sys.argv[2])
     if not target.exists():
         print("File {0} does not exist".format(target))
         sys.exit(1)
 
-    with open(target, "rb") as f:
-        filebuf = f.read()
-        hooks = static.analyze(target.name, filebuf)
-        report = analysis.Report(target.name, filebuf, hooks)
+    if sys.argv[1] == "static":
+        filebuf = None
+        with open(target, "rb") as f:
+            filebuf = f.read()
 
-    report.save(reportpath / (target.name + ".report"))
+        if filebuf:
+            a, d, dx = misc.AnalyzeAPK(filebuf, raw=True)
+            hooks = static.analyze(a, d, dx)
+            report = analysis.Report(target.name, hooks, (a, d, dx))
+            report.save(reportpath / (target.name + ".report"))
+
+    elif sys.argv[1] == "show":
+        report = analysis.Report.load(target)
+        webui.serve(report)

@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <title>{% block title %}{% endblock %} - Deckard</title>
+  <link href="{{ url_for('static', filename='vendor/bootstrap/dist/css/bootstrap.css') }}" rel="stylesheet" type="text/css">
+  <link href="{{ url_for('static', filename='css/style.sass.css') }}" rel="stylesheet" type="text/css">
+</head>
+
+<body>
+  {% for message in get_flashed_messages() %}
+  <div class="alert alert-primary" role="alert">{{ message }}</div>
+  {% endfor %}
+
+  <nav class="navbar navbar-dark bg-dark navbar-expand-lg">
+    <a class="navbar-brand" href="#">Deckard</a>
+  </nav>
+
+  <section class="content">
+    {% block content %}{% endblock %}
+  </section>
+</body>
