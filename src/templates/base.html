@@ -22,4 +22,8 @@
   <section class="content">
     {% block content %}{% endblock %}
   </section>
+
+  <script src="{{ url_for('static', filename='vendor/jquery/dist/jquery.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendor/lodash/lodash.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/site.js') }}"></script>
 </body>
