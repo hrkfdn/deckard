@@ -79,6 +79,18 @@ def analyze_method(method):
                 cls = cls.name
 
             targetmethod = resolve_identifier(ctx, inv.params[-2]) if inv.name == "findAndHookMethod" else None
+
+            # we can't deal with dynamic class names in static analysis
+            if type(cls) is not str:
+                print("Target class ({0}) is dynamic, skipping hook {0}#{1}".format(cls, targetmethod))
+                continue
+
+            # also skip dynamic method names
+            if not type(targetmethod) in [str, type(None)]:
+                print("Target method ({0}) is dynamic, skipping hook {0}#{1}".format(cls, targetmethod))
+                continue
+
+            # and dynamic hook objects
             if type(hook_obj) is not astparse.TypeName:
                 print("Callback object ({0}) is dynamic, skipping hook {1}#{2}".format(hook_obj, cls, targetmethod))
                 continue

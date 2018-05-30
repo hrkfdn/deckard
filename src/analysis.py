@@ -3,6 +3,10 @@ import pickle
 
 class Hook:
     def __init__(self, classname, method, callbackobj):
+        assert(type(classname) is str)
+        assert(type(method) in [str, type(None)])  # method can be None for constructor hooks
+        assert(type(callbackobj) is str)
+
         self.classname = classname
         self.method = method
         self.callbackobj = callbackobj
