@@ -12,6 +12,8 @@ import webui
 
 
 if __name__ == "__main__":
+    sys.setrecursionlimit(50000)
+
     if len(sys.argv) < 3:
         print("usage: {0} <static|dynamic|show> <path_to.apk|path_to.report>".format(sys.argv[0]))
         sys.exit(1)

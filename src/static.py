@@ -76,7 +76,7 @@ def analyze_method(method):
                     cls = resolve_identifier(ctx, cls.params[0])
             # class literals
             elif isinstance(cls, astparse.TypeName):
-                cls = cls.name
+                cls = cls.name.replace("/", ".")
 
             targetmethod = resolve_identifier(ctx, inv.params[-2]) if inv.name == "findAndHookMethod" else None
 
