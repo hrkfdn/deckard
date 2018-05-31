@@ -7,7 +7,9 @@
 
   <title>{% block title %}{% endblock %} - Deckard</title>
   <link href="{{ url_for('static', filename='vendor/bootstrap/dist/css/bootstrap.css') }}" rel="stylesheet" type="text/css">
+  <link href="{{ url_for('static', filename='vendor/font-awesome/css/font-awesome.css') }}" rel="stylesheet" type="text/css">
   <link href="{{ url_for('static', filename='css/style.sass.css') }}" rel="stylesheet" type="text/css">
+  <link href="{{ url_for('static', filename='css/pygments.css') }}" rel="stylesheet">
 </head>
 
 <body>
@@ -16,11 +18,13 @@
   {% endfor %}
 
   <nav class="navbar navbar-dark bg-dark navbar-expand-lg">
-    <a class="navbar-brand" href="#">Deckard</a>
+    <a class="navbar-brand" href="/">Deckard</a>
   </nav>
 
   <section class="content">
+    <div class="container-fluid">
     {% block content %}{% endblock %}
+    </div>
   </section>
 
   <script src="{{ url_for('static', filename='vendor/jquery/dist/jquery.js') }}"></script>

@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Hook Detail
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h5>Callback class decompilation</h5>
+        <h6 class="text-muted">decompiled by Androguard</h6>
+    </div>
+    <div class="card-body">
+        {{ report.get_source(hook)|safe }}
+    </div>
+</div>
+{% endblock %}

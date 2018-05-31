@@ -5,15 +5,21 @@ Hooks
 {% endblock %}
 
 {% block content %}
-    <div class="container-fluid">
-      <div class="row">
-        <div class="col-3">
-          <h4>Hooks</h4>
-          <ul id="hooktree"></ul>
-        </div>
-        <div class="col-9">
-          <h4>Hook information</h4>
-        </div>
-      </div>
-    </div>
+<div class="row">
+  <div class="col">
+    <h4>Extracted Hooks</h4>
+    <ul class="fa-ul" id="hooktree">
+      {% for hook in report.hooks.values() %}
+      <li class>
+        <a href="/hooks/{{ hook.calchash() }}">
+          <span class="fa-li">
+            <i class="fas {{ 'fa-hashtag' if hook.isconstructor else 'fa-plus' }}"></i>
+          </span>
+          {{ hook.classname }}{{ "()" if hook.isconstructor else "." + hook.method + "()" }}
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
 {% endblock %}

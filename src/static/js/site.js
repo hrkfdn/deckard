@@ -1,17 +1,17 @@
-var hooks = undefined;
+let hooks = undefined;
 
 function addHook(hook, hash) {
 
 }
 
 function populateHooks() {
-    var hookTree = {};
+    const hookTree = {};
 
     $.ajax("/hooks", {
         success: function(data, textStatus, jqXHR) {
             $.each(data, function(index, value) {
-                var hook = value;
-                var hash = index;
+                const hook = value;
+                const hash = index;
 
                 if(!_.has(hookTree, hook.classname)) {
                     _.set(hookTree, hook.classname, [hook]);
@@ -19,9 +19,9 @@ function populateHooks() {
                 else {
                     // hook directory already has hooks for this class
                     // -> merge this class into it
-                    var current = _.get(hookTree, hook.classname);
+                    const current = _.get(hookTree, hook.classname);
                     console.log(hook.classname, current);
-                    var merged = current.concat([hook]);
+                    const merged = current.concat([hook]);
                     _.set(hookTree, hook.classname, merged);
                 }
             });
@@ -34,5 +34,5 @@ function populateHooks() {
 $(document).ready(function() {
     hooks = $("#hookstree");
 
-    populateHooks();
+    //populateHooks();
 });

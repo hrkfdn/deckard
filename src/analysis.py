@@ -1,5 +1,9 @@
 import hashlib
 import pickle
+import pygments
+import pygments.lexers
+
+import utils
 
 
 class Hook:
@@ -20,6 +24,10 @@ class Hook:
         md5.update(self.callbackobj.encode("utf-8"))
         return md5.hexdigest()
 
+    @property
+    def isconstructor(self):
+        return self.method is None
+
     def __str__(self):
         return "Hook {0}#{1}, callback object {2}".format(self.classname, self.method, self.callbackobj)
 
@@ -30,8 +38,19 @@ class Hook:
 class Report:
     def __init__(self, name, hooks, session):
         self.name = name
-        self.hooks = {x.calchash() : x for x in hooks}
+        self.hooks = {x.calchash(): x for x in hooks}
         self.session = session
+
+    def get_source(self, hook, highlight=True):
+        (a, d, dx) = self.session
+        ca = dx.get_class_analysis(utils.to_dv_notation(hook.callbackobj))
+        src = ca.get_vm_class().get_source()
+
+        if highlight:
+            return pygments.highlight(src, pygments.lexers.JavaLexer(), pygments.formatters.HtmlFormatter())
+        else:
+            return src
+
 
     def save(self, path):
         with open(path, "wb") as f:
