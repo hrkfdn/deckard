@@ -28,6 +28,13 @@ class Hook:
     def isconstructor(self):
         return self.method is None
 
+    @property
+    def human_name(self):
+        if self.isconstructor:
+            return self.classname
+        else:
+            return "{0}.{1}".format(self.classname, self.method)
+
     def __str__(self):
         return "Hook {0}#{1}, callback object {2}".format(self.classname, self.method, self.callbackobj)
 
@@ -51,6 +58,18 @@ class Report:
         else:
             return src
 
+    def get_cg(self, hook):
+        (a, d, dx) = self.session
+        cbname = hook.callbackobj.replace("$", "\$")  # $ needs to be escaped as callgraph generator expects regexps
+        cg = dx.get_call_graph(classname=utils.to_dv_notation(cbname), methodname=".*HookedMethod")
+
+        nodes = [{"id": str(n),
+                  "label": n.name}
+                 for n in cg.nodes]
+
+        edges = [{"from": str(e[0]), "to": str(e[1])} for e in set(cg.edges)]
+
+        return {"nodes": nodes, "edges": edges}
 
     def save(self, path):
         with open(path, "wb") as f:

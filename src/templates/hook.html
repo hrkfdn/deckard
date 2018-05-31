@@ -5,6 +5,20 @@ Hook Detail
 {% endblock %}
 
 {% block content %}
+<h4>
+    <span class="badge badge-info">{{ "Constructor" if hook.isconstructor else "Method" }}</span>
+    {{ hook.human_name }}
+</h4>
+
+<div class="card">
+    <div class="card-header">
+        <h5>Callgraph</h5>
+    </div>
+    <div class="card-body">
+        <div id="callgraph"></div>
+    </div>
+</div>
+
 <div class="card">
     <div class="card-header">
         <h5>Callback class decompilation</h5>

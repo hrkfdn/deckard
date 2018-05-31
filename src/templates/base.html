@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="{{ request.endpoint }}">
 
 <head>
   <meta charset="utf-8">
@@ -7,6 +7,7 @@
 
   <title>{% block title %}{% endblock %} - Deckard</title>
   <link href="{{ url_for('static', filename='vendor/bootstrap/dist/css/bootstrap.css') }}" rel="stylesheet" type="text/css">
+  <link href="{{ url_for('static', filename='vendor/vis/dist/vis.css') }}" rel="stylesheet" type="text/css">
   <link href="{{ url_for('static', filename='vendor/font-awesome/css/font-awesome.css') }}" rel="stylesheet" type="text/css">
   <link href="{{ url_for('static', filename='css/style.sass.css') }}" rel="stylesheet" type="text/css">
   <link href="{{ url_for('static', filename='css/pygments.css') }}" rel="stylesheet">
@@ -29,5 +30,6 @@
 
   <script src="{{ url_for('static', filename='vendor/jquery/dist/jquery.js') }}"></script>
   <script src="{{ url_for('static', filename='vendor/lodash/lodash.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendor/vis/dist/vis.js') }}"></script>
   <script src="{{ url_for('static', filename='js/site.js') }}"></script>
 </body>

@@ -22,12 +22,19 @@ def serve(report, host="localhost", port=8080, debug=True):
 
     @app.route("/hooks")
     def hooks():
-        return jsonify({k:v.__dict__ for (k, v) in report.hooks.items()})
+        return jsonify({k: v.__dict__ for (k, v) in report.hooks.items()})
 
-    @app.route("/hooks/<hash>")
-    def hook(hash):
-        if hash in report.hooks:
-            return render_template("hook.html", report=report, hook=report.hooks[hash])
+    @app.route("/hooks/<md5>/")
+    def hook(md5):
+        if md5 in report.hooks:
+            return render_template("hook.html", report=report, hook=report.hooks[md5])
+        else:
+            return "invalid hash", 404
+
+    @app.route("/hooks/<md5>/callgraph")
+    def callgraph(md5):
+        if md5 in report.hooks:
+            return jsonify(report.get_cg(report.hooks[md5]))
         else:
             return "invalid hash", 404
 

@@ -31,8 +31,23 @@ function populateHooks() {
     console.log(hookTree);
 }
 
+function renderCallgraph() {
+    $.ajax("callgraph", {
+        success: function (data, textStatus, jqXHR) {
+            const callgraph = document.getElementById("callgraph");
+            const nodes = new vis.DataSet(data.nodes);
+            const edges = new vis.DataSet(data.edges);
+            const network = new vis.Network(callgraph, {nodes: nodes, edges: edges}, {
+                height: "400px"
+            });
+        }
+    });
+}
+
 $(document).ready(function() {
     hooks = $("#hookstree");
 
-    //populateHooks();
+    if($("html").hasClass("hook")) {
+        renderCallgraph();
+    }
 });

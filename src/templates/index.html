@@ -11,11 +11,11 @@ Hooks
     <ul class="fa-ul" id="hooktree">
       {% for hook in report.hooks.values() %}
       <li class>
-        <a href="/hooks/{{ hook.calchash() }}">
+        <a href="{{ url_for('hook', md5=hook.calchash()) }}">
           <span class="fa-li">
             <i class="fas {{ 'fa-hashtag' if hook.isconstructor else 'fa-plus' }}"></i>
           </span>
-          {{ hook.classname }}{{ "()" if hook.isconstructor else "." + hook.method + "()" }}
+          {{ hook.human_name }}
         </a>
       </li>
       {% endfor %}
