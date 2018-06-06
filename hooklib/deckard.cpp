@@ -31,14 +31,16 @@ void hookMethodNative(JNIEnv* env, jclass clazz, jobject
                       javaReflectedMethod, jobject declaringClass,
                       jint slot, jobject javaAdditionalInfo) {
 
-  _log("hookMethodNative called!");
-
   JNIHelper helper(env);
 
   std::string methodName = helper.getName(javaReflectedMethod);
   std::string className = helper.getName(declaringClass);
 
-  _log("hookMethodNative(%s, %s)", className.c_str(), methodName.c_str());
+  jobject methodHook = helper.getHookObject(clazz, javaAdditionalInfo);
+  jobject hookClass = helper.getClass(methodHook);
+  std::string hookClassName = helper.getName(hookClass);
+
+  _log("hookMethodNative: %s %s %s", className.c_str(), methodName.c_str(), hookClassName.c_str());
 
   _hookMethodNative(env, clazz, javaReflectedMethod, declaringClass, slot, javaAdditionalInfo);
 }

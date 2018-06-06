@@ -8,6 +8,8 @@
 class JNIHelper {
 public:
   JNIHelper(JNIEnv* env);
+  jobject getHookObject(jclass bridgeClass, jobject additionalHookInfo);
+  jobject getClass(jobject obj);
   std::string getName(jobject obj);
 private:
   JNIEnv* env;
