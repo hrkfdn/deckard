@@ -7,6 +7,7 @@
 #include <android/log.h>
 
 #include "xposed_shared.h"
+#include "jnihelper.h"
 
 void _log(const char* fmt, ...) {
   char* abuf;
@@ -22,12 +23,6 @@ void _log(const char* fmt, ...) {
   __android_log_print(ANDROID_LOG_DEBUG, "Deckard", "%s", abuf);
 }
 
-jstring callGetName(JNIEnv* env, jobject obj) {
-  jclass cls = env->GetObjectClass(obj);
-  jmethodID getNameMethod = env->GetMethodID(cls, "getName", "()Ljava/lang/String;");
-  return (jstring)env->CallObjectMethod(obj, getNameMethod, 0);
-}
-
 // Java declaration: void hookMethodNative(Member method, Class<?>
 // declaringClass, int slot, Object additionalInfo);
 typedef void (*hookMethodNative_t)(JNIEnv*, jclass, jobject, jobject, jint, jobject);
@@ -38,22 +33,12 @@ void hookMethodNative(JNIEnv* env, jclass clazz, jobject
 
   _log("hookMethodNative called!");
 
-  jboolean clsNameIsCopy;
-  jboolean memberNameIsCopy;
-  jstring clsName = callGetName(env, declaringClass);
-  jstring memberName = callGetName(env, javaReflectedMethod);
+  JNIHelper helper(env);
 
-  const char *clsStr = env->GetStringUTFChars(clsName, &clsNameIsCopy);
-  const char *memberStr = env->GetStringUTFChars(memberName, &memberNameIsCopy);
+  std::string methodName = helper.getName(javaReflectedMethod);
+  std::string className = helper.getName(declaringClass);
 
-  _log("hookMethodNative(%s, %s)", clsStr, memberStr);
-
-  if(clsNameIsCopy == JNI_TRUE) {
-    env->ReleaseStringUTFChars(clsName, clsStr);
-  }
-  if(memberNameIsCopy == JNI_TRUE) {
-    env->ReleaseStringUTFChars(memberName, memberStr);
-  }
+  _log("hookMethodNative(%s, %s)", className.c_str(), methodName.c_str());
 
   _hookMethodNative(env, clazz, javaReflectedMethod, declaringClass, slot, javaAdditionalInfo);
 }
