@@ -59,15 +59,24 @@ class Report:
             return src
 
     def get_cg(self, hook):
+        def get_vis_nodes(nodes, idprefix=""):
+            return [{"id": idprefix + str(n),
+                     "label": "{0}\n{1}".format(utils.to_java_notation(n.class_name).split(".")[-1], n.name),
+                     "color": "#ffb3b3" if n.name.endswith("HookedMethod") else "#b3c6ff" }
+                    for n in nodes]
+        def get_vis_edges(edges, idprefix=""):
+            return [{"from": idprefix + str(e[0]),
+                     "to": idprefix + str(e[1])}
+                    for e in set(edges)]
+
         (a, d, dx) = self.session
         cbname = hook.callbackobj.replace("$", "\$")  # $ needs to be escaped as callgraph generator expects regexps
-        cg = dx.get_call_graph(classname=utils.to_dv_notation(cbname), methodname=".*HookedMethod")
 
-        nodes = [{"id": str(n),
-                  "label": n.name}
-                 for n in cg.nodes]
+        cg_before = dx.get_call_graph(classname=utils.to_dv_notation(cbname), methodname="beforeHookedMethod")
+        cg_after = dx.get_call_graph(classname=utils.to_dv_notation(cbname), methodname="afterHookedMethod")
 
-        edges = [{"from": str(e[0]), "to": str(e[1])} for e in set(cg.edges)]
+        nodes = get_vis_nodes(cg_before.nodes) + get_vis_nodes(cg_after.nodes, "+")
+        edges = get_vis_edges(cg_before.edges) + get_vis_edges(cg_after.edges, "+")
 
         return {"nodes": nodes, "edges": edges}
 
