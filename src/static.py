@@ -51,17 +51,26 @@ def analyze_method(method):
     astparse.dfs(ast['body'], dfs_callback)
 
     for inv, ctx in invocations:
-        if type(inv.base) is astparse.TypeName and \
-                inv.base.name == "de/robv/android/xposed/XposedHelpers" and \
-                (inv.name == "findAndHookMethod" or inv.name == "findAndHookConstructor"):
-            # hook objects are passed as an Object array of N elements.
-            # where N-1 elements are the classes of the target function's parameters
-            # and the last/N-th element contains the XC_MethodHook instance, which
-            # we are trying to extract.
-            hook_array = inv.params[-1]
-            hook_array_size = ctx[str(hook_array)].param.value
-            hook_obj_identifier = "{0}[{1}]".format(hook_array, int(hook_array_size) - 1)
-            hook_obj = resolve_identifier(ctx, hook_obj_identifier)
+        if not type(inv.base) is astparse.TypeName:
+            continue
+        if (inv.base.name == "de/robv/android/xposed/XposedHelpers" and \
+            (inv.name == "findAndHookMethod" or \
+             inv.name == "findAndHookConstructor")) or \
+            (inv.base.name == "de/robv/android/xposed/XposedBridge" and \
+             (inv.name == "hookAllConstructors")):
+
+            if type(inv.params[-1]) is not astparse.ClassInstanceCreation:
+                # hook objects are passed as an Object array of N elements.
+                # where N-1 elements are the classes of the target function's parameters
+                # and the last/N-th element contains the XC_MethodHook instance, which
+                # we are trying to extract.
+                hook_array = inv.params[-1]
+                hook_array_size = ctx[str(hook_array)].param.value
+                hook_obj_identifier = "{0}[{1}]".format(hook_array, int(hook_array_size) - 1)
+                hook_obj = resolve_identifier(ctx, hook_obj_identifier)
+            else:
+                # hookAllConstructors receives a direct XC_MethodHook instance
+                hook_obj = inv.params[-1]
 
             # get hook class if referenced directly in a class instance creation
             if isinstance(hook_obj, astparse.ClassInstanceCreation):
