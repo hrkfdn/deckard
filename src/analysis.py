@@ -3,6 +3,7 @@ import pickle
 import pygments
 import pygments.lexers
 
+import static
 import utils
 
 
@@ -79,6 +80,10 @@ class Report:
         edges = get_vis_edges(cg_before.edges) + get_vis_edges(cg_after.edges, "+")
 
         return {"nodes": nodes, "edges": edges}
+
+    def get_hook_analysis(self, hook):
+        (a, d, dx) = self.session
+        return static.analyze_hooks(a, d, dx, hook)
 
     def save(self, path):
         with open(path, "wb") as f:

@@ -1,8 +1,10 @@
 import androguard.misc
 import androguard.decompiler.dad.decompile
+import re
 
 import analysis
 import astparse
+import utils
 
 
 def resolve_identifier(context, identifier):
@@ -163,3 +165,60 @@ def analyze(a, d, dx):
         hooks.extend(analyze_method(m))
 
     return hooks
+
+def analyze_callback(a, d, dx, callback):
+    result = []
+    decompiler = androguard.decompiler.dad.decompile.DvMethod(dx.get_method(callback.get_method()))
+    decompiler.process(doAST=True)
+    ast = decompiler.ast
+    context = {}
+
+    for p in ast["params"]:
+        param = astparse.Parameter(p)
+        context[str(param.name)] = param
+
+    invocations = []
+    def dfs_callback(node):
+        parsed = astparse.parse_expression(node)
+        if type(parsed) is not list:
+            print("callback:", parsed)
+        if node[0] == "MethodInvocation":
+            invocations.append((parsed, context.copy()))
+        if node[0] == "LocalDeclarationStatement":
+            context[str(parsed.name)] = parsed.value
+        elif node[0] == "Assignment":
+            context[str(parsed.lhs)] = parsed.rhs
+        return True
+
+    astparse.dfs(ast['body'], dfs_callback)
+
+    for inv, ctx in invocations:
+        if inv.name == "setResult" and inv.triple[0] == "de/robv/android/xposed/XC_MethodHook$MethodHookParam":
+            result.append("Setting return value to " + str(inv.params[0]))
+        elif inv.triple[0] == "de/robv/android/xposed/XposedHelpers":
+            rex = re.match(r"set(.*)Field", inv.name)
+            if rex:
+                result.append("Setting {0} of {1} to".format(rex[1],
+                                                             resolve_identifier(inv.params[1]),
+                                                             resolve_identifier(inv.params[2])))
+            rex = re.match(r"get(.*)Field", inv.name)
+            if rex:
+                result.append("Getting {0} field \"{1}\" of {2}".format(rex[1],
+                                                                        resolve_identifier(ctx, inv.params[1]),
+                                                                        resolve_identifier(ctx, inv.params[0])))
+
+    return result
+
+def analyze_hooks(a, d, dx, hook):
+    result = {}
+    cbname = hook.callbackobj.replace("$", "\$")  # $ needs to be escaped as callgraph generator expects regexps
+
+    for cb in dx.find_methods(utils.to_dv_notation(cbname),
+                              "^(after|before)HookedMethod$",
+                              "\(Lde/robv/android/xposed/XC_MethodHook\$MethodHookParam;\)V"):
+        name = cb.get_method().get_name()
+        analysis = analyze_callback(a, d, dx, cb)
+        if analysis:
+            result[name] = analysis
+
+    return result
