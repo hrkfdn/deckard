@@ -198,14 +198,19 @@ def analyze_callback(a, d, dx, callback):
         elif inv.triple[0] == "de/robv/android/xposed/XposedHelpers":
             rex = re.match(r"set(.*)Field", inv.name)
             if rex:
-                result.append("Setting {0} of {1} to".format(rex[1],
-                                                             resolve_identifier(inv.params[1]),
-                                                             resolve_identifier(inv.params[2])))
+                result.append("Setting {0} of {1} to {2}".format(rex[1],
+                                                                 resolve_identifier(ctx, inv.params[1]),
+                                                                 resolve_identifier(ctx, inv.params[2])))
             rex = re.match(r"get(.*)Field", inv.name)
             if rex:
                 result.append("Getting {0} field \"{1}\" of {2}".format(rex[1],
                                                                         resolve_identifier(ctx, inv.params[1]),
                                                                         resolve_identifier(ctx, inv.params[0])))
+            rex = re.match(r"call(.*)Method", inv.name)
+            if rex:
+                result.append("Calling {0} method \"{2}\" of {1}".format(rex[1],
+                                                                         resolve_identifier(ctx, inv.params[0]),
+                                                                         resolve_identifier(ctx, inv.params[1])))
 
     return result
 
