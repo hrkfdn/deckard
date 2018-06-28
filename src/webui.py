@@ -27,7 +27,8 @@ def serve(report, host="localhost", port=8080, debug=True):
     @app.route("/hooks/<md5>/")
     def hook(md5):
         if md5 in report.hooks:
-            return render_template("hook.html", report=report, hook=report.hooks[md5])
+            h = report.hooks[md5]
+            return render_template("hook.html", report=report, hook=h, analysis=report.get_hook_analysis(h))
         else:
             return "invalid hash", 404
 

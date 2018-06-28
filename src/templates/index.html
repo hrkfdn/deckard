@@ -13,7 +13,7 @@ Hooks
       <li class>
         <a href="{{ url_for('hook', md5=hook.calchash()) }}">
           <span class="fa-li">
-            <i class="fas {{ 'fa-hashtag' if hook.isconstructor else 'fa-plus' }}"></i>
+            <i class="fa fas {{ 'fa-hashtag' if hook.isconstructor else 'fa-plus' }}"></i>
           </span>
           {{ hook.human_name }}
         </a>

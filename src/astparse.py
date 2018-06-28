@@ -1,10 +1,11 @@
 class ClassInstanceCreation:
     def __init__(self, node):
         assert (node[0] == "ClassInstanceCreation")
+        self.params = [parse_expression(x) for x in node[1]]
         self.type = parse_expression(node[2])
 
     def __str__(self):
-        return "new ({0})".format(self.type)
+        return "new {0}({1})".format(self.type, ", ".join(str(x) for x in self.params))
 
 
 class Literal:
@@ -34,6 +35,14 @@ class Local:
     def __str__(self):
         return self.name
 
+class Cast:
+    def __init__(self, node):
+        assert (node[1][0][0] == "Cast")
+        self.type = parse_expression(node[1][0][1][0])
+        self.value = parse_expression(node[1][0][1][1])
+
+    def __str__(self):
+        return "({0}){1}".format(self.type, self.value)
 
 class TypeName:
     def __init__(self, node):
@@ -41,7 +50,7 @@ class TypeName:
         self.name = node[1][0]
 
     def __str__(self):
-        return "Type: " + self.name
+        return self.name
 
 
 class FieldAccess:
@@ -131,7 +140,7 @@ class MethodInvocation:
         self.name = node[3]
 
     def __str__(self):
-        return "Invocation: {0}.{1}({2})".format(self.base, self.name, ", ".join(str(x) for x in self.params))
+        return "{0}.{1}({2})".format(self.base, self.name, ", ".join(str(x) for x in self.params))
 
 
 def parse_expression(node):
@@ -145,14 +154,22 @@ def parse_expression(node):
             return ArrayAccess(node)
         elif node[0] == "ArrayCreation":
             return ArrayCreation(node)
+        elif node[0] == "Assignment":
+            return Assignment(node)
         elif node[0] == "ClassInstanceCreation":
             return ClassInstanceCreation(node)
+        elif node[0] == "ExpressionStatement":
+            return parse_expression(node[1])
         elif node[0] == "Literal":
             return Literal(node)
         elif node[0] == "FieldAccess":
             return FieldAccess(node)
         elif node[0] == "Local":
             return Local(node)
+        elif node[0] == "LocalDeclarationStatement":
+            return LocalDeclarationStatement(node)
+        elif node[0] == "Parenthesis" and node[1][0][0] == "Cast":
+            return Cast(node)
         elif node[0] == "TypeName":
             return TypeName(node)
         elif node[0] == "MethodInvocation":

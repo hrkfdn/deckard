@@ -33,6 +33,7 @@ if __name__ == "__main__":
         if filebuf:
             a, d, dx = misc.AnalyzeAPK(filebuf, raw=True)
             hooks = static.analyze(a, d, dx)
+            print("{0} hook(s) identified".format(len(hooks)))
             report = analysis.Report(target.name, hooks, (a, d, dx))
             report.save(reportpath / (target.name + ".report"))
 
