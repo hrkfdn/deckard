@@ -1,27 +1,11 @@
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <dlfcn.h>
 
 #include <jni.h>
-#include <android/log.h>
 
 #include "xposed_shared.h"
 #include "jnihelper.h"
-
-void _log(const char* fmt, ...) {
-  char* abuf;
-  va_list ap;
-
-  va_start(ap, fmt);
-  if(vasprintf(&abuf, fmt, ap) == -1) {
-    va_end(ap);
-    return;
-  }
-
-  printf("%s", abuf);
-  __android_log_print(ANDROID_LOG_DEBUG, "Deckard", "%s", abuf);
-}
+#include "utils.h"
 
 // Java declaration: void hookMethodNative(Member method, Class<?>
 // declaringClass, int slot, Object additionalInfo);
@@ -43,7 +27,7 @@ void hookMethodNative(JNIEnv* env, jclass clazz, jobject
   jobject pkg = helper.getPackage(hookClass);
   std::string pkgName = helper.getName(pkg);
 
-  _log("hookMethodNative(%s) %s %s %s", pkgName.c_str(), className.c_str(), methodName.c_str(), hookClassName.c_str());
+  _log("%s|%s|%s|%s", pkgName.c_str(), className.c_str(), methodName.c_str(), hookClassName.c_str());
 
   _hookMethodNative(env, clazz, javaReflectedMethod, declaringClass, slot, javaAdditionalInfo);
 }
