@@ -7,35 +7,43 @@ jobject JNIHelper::getHookObject(jclass bridgeClass, jobject additionalHookInfo)
   jobject callbacks = env->GetObjectField(additionalHookInfo, callbacksId);
 
   // call callbacks.getSnapshot()
-  jclass snapshotClass = env->GetObjectClass(callbacks);
-  jmethodID getSnapshotId = env->GetMethodID(snapshotClass, "getSnapshot", "()[Ljava/lang/Object;");
-  jobjectArray snapshot = (jobjectArray)env->CallObjectMethod(callbacks, getSnapshotId);
+  jobjectArray snapshot = (jobjectArray)this->callMethod(callbacks, "getSnapshot", "()[Ljava/lang/Object;");
 
   // get callback element, it's always the only callback element because we reset the array
   return env->GetObjectArrayElement(snapshot, 0);
 }
 
 jobject JNIHelper::getClass(jobject obj) {
-  jclass cls = env->GetObjectClass(obj);
-  jmethodID mid = env->GetMethodID(cls, "getClass", "()Ljava/lang/Class;");
-  return env->CallObjectMethod(obj, mid);
+  return this->callMethod(obj, "getClass", "()Ljava/lang/Class;");
+}
+
+jobject JNIHelper::getPackage(jobject obj) {
+  return this->callMethod(obj, "getPackage", "()Ljava/lang/Package;");
 }
 
 std::string JNIHelper::getName(jobject obj) {
   jboolean iscopy;
-  jclass cls = env->GetObjectClass(obj);
-  jmethodID getNameMethod = env->GetMethodID(cls, "getName", "()Ljava/lang/String;");
-  jstring ret = (jstring)env->CallObjectMethod(obj, getNameMethod, 0);
+  jstring ret = (jstring)this->callMethod(obj, "getName", "()Ljava/lang/String;");
+  return this->makeString(ret);
+}
 
-  const char* str = env->GetStringUTFChars(ret, &iscopy);
+std::string JNIHelper::makeString(jstring jstr) {
+  jboolean iscopy;
+  const char* str = env->GetStringUTFChars(jstr, &iscopy);
   std::string s(str);
 
   // free JNI object
   if(iscopy == JNI_TRUE) {
-    env->ReleaseStringUTFChars(ret, str);
+    env->ReleaseStringUTFChars(jstr, str);
   }
 
   return s;
+}
+
+jobject JNIHelper::callMethod(jobject obj, const std::string& name, const std::string& signature) {
+  jclass cls = env->GetObjectClass(obj);
+  jmethodID mid = env->GetMethodID(cls, name.c_str(), signature.c_str());
+  return env->CallObjectMethod(obj, mid);
 }
 
 JNIHelper::JNIHelper(JNIEnv* env) {
