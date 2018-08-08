@@ -26,6 +26,9 @@ required:
 - The Android SDK and NDK need to be installed
 - The native library in `hooklib/`needs to be compiled using
   `ndk-build`
+  - If you have a working installation of Docker, you can use
+    `hooklib/build.sh` to compile the native library in a prepared
+    environment
 - An emulator or real device with root privileges and write access to
   the system partition is required:
   - When using the Android emulator, enable persistent system
