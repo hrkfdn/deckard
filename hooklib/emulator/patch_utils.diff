@@ -1,0 +1,56 @@
+diff --git a/src/app.py b/src/app.py
+index 50bfcf6..aca92fd 100644
+--- a/src/app.py
++++ b/src/app.py
+@@ -214,6 +214,7 @@ def run():
+         cmd = 'emulator/emulator @{name} -gpu off -prop emu.uuid={uuid} -verbose -wipe-data'.format(name=avd_name, uuid=device_id)
+     else:
+         cmd = 'emulator/emulator @{name} -gpu off -prop emu.uuid={uuid} -verbose'.format(name=avd_name, uuid=device_id)
++    cmd += ' -writable-system -selinux permissive'
+     appium = convert_str_to_bool(str(os.getenv('APPIUM', False)))
+     if appium:
+         subprocess.Popen(cmd.split())
+diff --git a/src/utils.sh b/src/utils.sh
+index 5f25741..d0333a1 100755
+--- a/src/utils.sh
++++ b/src/utils.sh
+@@ -14,6 +14,31 @@ function wait_emulator_to_be_ready () {
+   done
+ }
+ 
++function init_deckard () {
++    if [ ! -f /root/deckard_init ]
++    then
++        wait_emulator_to_be_ready
++        echo "Installing Xposed application"
++        adb install /root/xposed.apk
++        
++        echo "Installing APKs"
++        for file in /root/apks/*.apk
++        do
++            echo "Installing $file"
++            adb install "$file"
++        done
++        
++        adb install /root/xposed.apk
++        adb root
++        adb remount
++        echo "Applying Xposed Zygote patch"
++        /root/flash_xposed.sh /root/xposed_framework.zip
++        adb shell "sync && reboot"
++        touch /root/deckard_init
++        sleep 5
++    fi
++}
++
+ function change_language_if_needed() {
+   if [ ! -z "${LANGUAGE// }" ] && [ ! -z "${COUNTRY// }" ]; then
+     wait_emulator_to_be_ready
+@@ -38,6 +63,7 @@ function disable_animation () {
+   adb shell "settings put global animator_duration_scale 0.0"
+ }
+ 
++init_deckard
+ change_language_if_needed
+ sleep 1
+ install_google_play
