@@ -11,10 +11,10 @@ index 50bfcf6..aca92fd 100644
      if appium:
          subprocess.Popen(cmd.split())
 diff --git a/src/utils.sh b/src/utils.sh
-index 5f25741..d0333a1 100755
+index 5f25741..91845f6 100755
 --- a/src/utils.sh
 +++ b/src/utils.sh
-@@ -14,6 +14,31 @@ function wait_emulator_to_be_ready () {
+@@ -14,6 +14,34 @@ function wait_emulator_to_be_ready () {
    done
  }
  
@@ -24,20 +24,23 @@ index 5f25741..d0333a1 100755
 +        wait_emulator_to_be_ready
 +        echo "Installing Xposed application"
 +        adb install /root/xposed.apk
-+        
++
 +        echo "Installing APKs"
 +        for file in /root/apks/*.apk
 +        do
 +            echo "Installing $file"
 +            adb install "$file"
 +        done
-+        
-+        adb install /root/xposed.apk
++
 +        adb root
 +        adb remount
++        
++        echo "Enabling Xposed modules"
++        /root/generate_modlist.sh
 +        echo "Applying Xposed Zygote patch"
 +        /root/flash_xposed.sh /root/xposed_framework.zip
-+        adb shell "sync && reboot"
++        adb shell "stop; start"
++        #adb shell "sync && reboot"
 +        touch /root/deckard_init
 +        sleep 5
 +    fi
@@ -46,7 +49,7 @@ index 5f25741..d0333a1 100755
  function change_language_if_needed() {
    if [ ! -z "${LANGUAGE// }" ] && [ ! -z "${COUNTRY// }" ]; then
      wait_emulator_to_be_ready
-@@ -38,6 +63,7 @@ function disable_animation () {
+@@ -38,6 +66,7 @@ function disable_animation () {
    adb shell "settings put global animator_duration_scale 0.0"
  }
  
@@ -54,3 +57,19 @@ index 5f25741..d0333a1 100755
  change_language_if_needed
  sleep 1
  install_google_play
+diff --git a/supervisord.conf b/supervisord.conf
+index 9ef4949..8a56e8c 100644
+--- a/supervisord.conf
++++ b/supervisord.conf
+@@ -62,3 +62,10 @@ autorestart=false
+ stdout_logfile=%(ENV_LOG_PATH)s/adb-utils.stdout.log
+ stderr_logfile=%(ENV_LOG_PATH)s/adb-utils.stderr.log
+ priority=5
++
++[program:deckard]
++command=adb logcat "Deckard:V *:S"
++autorestart=true
++priority=5
++stdout_logfile=/dev/stdout
++stdout_logfile_maxbytes=0
+\ No newline at end of file

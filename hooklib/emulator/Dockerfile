@@ -1,10 +1,11 @@
 FROM butomo1989/docker-android-x86-8.1
 
-RUN apt-get -qqy update && apt-get -qqy install --no-install-recommends cpio patch
+RUN apt-get -qqy update && apt-get -qqy install --no-install-recommends aapt cpio patch
 
 COPY patch_utils.diff /root/patch_utils.diff
 COPY patch_ramdisk.sh /root/patch_ramdisk.sh
 COPY flash_xposed.sh /root/flash_xposed.sh
+COPY generate_modlist.sh /root/generate_modlist.sh
 COPY framework.zip /root/xposed_framework.zip
 COPY libdeckard.so /root/libdeckard.so
 

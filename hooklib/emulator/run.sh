@@ -6,26 +6,26 @@ XPOSED_URL="https://www.apklinker.com/wp-content/uploads/uploaded_apk/5a61a51c53
 SCRIPT=$(readlink -f "$0")
 SCRIPTPATH=$(dirname "$SCRIPT")
 
-if [ ! -f ../libs/x86/libdeckard.so ]
+if [ ! -f $SCRIPTPATH/../libs/x86/libdeckard.so ]
 then
     echo "libdeckard.so does not exist, please build it first, e.g. by using hooklib/build.sh."
     exit 1
 fi
 
-if [ ! -f framework.zip ]
+if [ ! -f $SCRIPTPATH/framework.zip ]
 then
     echo "[+] Downloading Xposed framework"
     curl -qo "$SCRIPTPATH/framework.zip" "$FRAMEWORK_URL"
 fi
 
-if [ ! -f xposed.apk ]
+if [ ! -f $SCRIPTPATH/xposed.apk ]
 then
     echo "[+] Downloading Xposed installer"
     curl -qo "$SCRIPTPATH/xposed.apk" "$XPOSED_URL"
 fi
 
-cp ../libs/x86/libdeckard.so ./libdeckard.so
+cp $SCRIPTPATH/../libs/x86/libdeckard.so ./libdeckard.so
 
 #docker build --no-cache -t deckard/emulator .
-docker build -t deckard/emulator .
-docker run -it --privileged --rm -p 6080:6080 -p 5554:5554 -p 5555:5555  deckard/emulator
+docker build -t deckard/emulator $SCRIPTPATH
+docker run -i --privileged --rm -p 6080:6080 -p 5554:5554 -p 5555:5555  deckard/emulator
