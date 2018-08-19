@@ -18,8 +18,6 @@ def parse_lines(lines):
             if len(entries) == 4:
                 src, targetclass, targetmethod, hookobj = entries[0], entries[1], entries[2], entries[3]
                 hooks.add(analysis.Hook(targetclass, targetmethod, hookobj))
-            else:
-                print("Non-parseable Deckard message:", line[7])
 
     return hooks
 
@@ -43,8 +41,10 @@ def get_input(progname, apk):
             if len(buf) and buf[-1] == "\n":
                 line = buf.strip()
                 if is_deckard_line(line.split()):
-                    print("Deckard hook message received")
+                    print("XPOSED HOOK:", line)
                     lines.append(line)
+                else:
+                    print("INFO:", line)
                 buf = ""
     except KeyboardInterrupt:
         return lines

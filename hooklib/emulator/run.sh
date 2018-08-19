@@ -28,4 +28,9 @@ cp $SCRIPTPATH/../libs/x86/libdeckard.so ./libdeckard.so
 
 #docker build --no-cache -t deckard/emulator .
 docker build -t deckard/emulator $SCRIPTPATH
-docker run -i --privileged --rm -p 6080:6080 -p 5554:5554 -p 5555:5555  deckard/emulator
+
+CONTAINER=$(docker run -d --privileged --rm -p 6080:6080 -p 5554:5554 -p 5555:5555  deckard/emulator)
+echo "Container launched, ID: $CONTAINER"
+
+trap "echo Stopping container.. && docker stop $CONTAINER" 2
+docker logs -f $CONTAINER
