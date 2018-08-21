@@ -11,6 +11,14 @@ import dynamic
 import static
 import webui
 
+def save_report(hooks, reportpath, target):
+    if len(hooks) == 0:
+        print("No hooks identified. Not saving report.")
+    else:
+        print("{0} hook(s) identified, generating report".format(len(hooks)))
+        report = analysis.Report(target.name, hooks, (a, d, dx))
+        report.save(reportpath / (target.name + ".report"))
+        print("Report saved to", reportpath / (target.name + ".report"))
 
 if __name__ == "__main__":
     sys.setrecursionlimit(50000)
@@ -33,20 +41,16 @@ if __name__ == "__main__":
 
         if filebuf:
             a, d, dx = misc.AnalyzeAPK(filebuf, raw=True)
-            hooks = static.analyze(a, d, dx)
-            print("{0} hook(s) identified, generating report".format(len(hooks)))
-            report = analysis.Report(target.name, hooks, (a, d, dx))
-            report.save(reportpath / (target.name + ".report"))
-            print("Report saved to", target)
+            hooks = set(static.analyze(a, d, dx))
+            save_report(hooks, reportpath, target)
     elif sys.argv[1] == "dynamic":
         lines = dynamic.get_input(sys.argv[0], target)
-        hooks = dynamic.parse_lines(lines)
-        print("{} hooks captured, generating report".format(len(hooks)))
+        hooks = set(dynamic.parse_lines(lines))
+        print("{} hooks captured".format(len(hooks)))
         a, d, dx = misc.AnalyzeAPK(target)
-        hooks_filtered = dynamic.filter(hooks, dx)
-        report = analysis.Report(target.name, hooks_filtered, (a, d, dx))
-        report.save(reportpath / (target.name + ".report"))
-        print("Report saved to", target)
+        hooks_filtered = set(dynamic.filter(hooks, dx))
+        save_report(hooks_filtered, reportpath, target)
+
     elif sys.argv[1] == "show":
         report = analysis.Report.load(target)
         webui.serve(report)

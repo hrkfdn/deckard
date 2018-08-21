@@ -36,6 +36,12 @@ class Hook:
         else:
             return "{0}.{1}".format(self.classname, self.method)
 
+    def __hash__(self):
+        return hash((self.classname, self.method, self.callbackobj))
+
+    def __eq__(self, other):
+        return isinstance(other, Hook) and hash(self) == hash(other)
+
     def __str__(self):
         return "Hook {0}#{1}, callback object {2}".format(self.classname, self.method, self.callbackobj)
 

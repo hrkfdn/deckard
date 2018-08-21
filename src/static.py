@@ -61,7 +61,9 @@ def analyze_method(method):
             (inv.base.name == "de/robv/android/xposed/XposedBridge" and \
              (inv.name == "hookAllConstructors")):
 
-            if type(inv.params[-1]) is not astparse.ClassInstanceCreation:
+            if type(resolve_identifier(ctx, inv.params[-1])) is astparse.Parameter:
+                hook_obj = resolve_identifier(ctx, inv.params[-1])
+            elif type(inv.params[-1]) is not astparse.ClassInstanceCreation:
                 # hook objects are passed as an Object array of N elements.
                 # where N-1 elements are the classes of the target function's parameters
                 # and the last/N-th element contains the XC_MethodHook instance, which
@@ -120,26 +122,26 @@ def analyze_method(method):
 def analyze(a, d, dx):
     if not (a and d and dx):
         print("Could not analyze..")
-        return
+        return []
 
-    cls = dx.get_class_analysis("Lde/robv/android/xposed/XposedHelpers;")
-    if not cls:
+    xh = dx.get_class_analysis("Lde/robv/android/xposed/XposedHelpers;")
+    if not xh:
         print("No reference to Xposed found. Is this an Xposed module?")
-        return
+        return []
 
-    m_clsparam = dx.get_method_analysis_by_name(cls.get_vm_class().get_name(),
+    m_clsparam = dx.get_method_analysis_by_name(xh.get_vm_class().get_name(),
                                                 "findAndHookMethod",
                                                 "(Ljava/lang/Class; Ljava/lang/String; "
                                                 "[Ljava/lang/Object;)Lde/robv/android/xposed/XC_MethodHook$Unhook;")
-    m_strparam = dx.get_method_analysis_by_name(cls.get_vm_class().get_name(),
+    m_strparam = dx.get_method_analysis_by_name(xh.get_vm_class().get_name(),
                                                 "findAndHookMethod",
                                                 "(Ljava/lang/String; Ljava/lang/ClassLoader; Ljava/lang/String; "
                                                 "[Ljava/lang/Object;)Lde/robv/android/xposed/XC_MethodHook$Unhook;")
-    c_clsparam = dx.get_method_analysis_by_name(cls.get_vm_class().get_name(),
+    c_clsparam = dx.get_method_analysis_by_name(xh.get_vm_class().get_name(),
                                                 "findAndHookConstructor",
                                                 "(Ljava/lang/Class; [Ljava/lang/Object;)Lde/robv/android/xposed"
                                                 "/XC_MethodHook$Unhook;")
-    c_strparam = dx.get_method_analysis_by_name(cls.get_vm_class().get_name(),
+    c_strparam = dx.get_method_analysis_by_name(xh.get_vm_class().get_name(),
                                                 "findAndHookConstructor",
                                                 "(Ljava/lang/String; Ljava/lang/ClassLoader; "
                                                 "[Ljava/lang/Object;)Lde/robv/android/xposed/XC_MethodHook$Unhook;")
