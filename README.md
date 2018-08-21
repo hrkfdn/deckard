@@ -19,6 +19,10 @@ usage: src/deckard.py <static|dynamic|show> <path_to.apk|path_to.report>
 
 ## Requirements
 
+- Python 3
+- Node.js and Yarn
+- Docker (for dynamic analysis)
+
 In order to use Deckard, required third party Python modules can be
 installed to a virtual environment using `setup.sh`.
 

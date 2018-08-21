@@ -1,5 +1,7 @@
 #!/bin/sh
 
+yarn install
+
 # initializes a virtual environment
 # and installs required dependencies
 if [ ! -d "venv" ]; then
