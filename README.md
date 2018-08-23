@@ -1,7 +1,10 @@
 # Deckard
 
 Deckard is a static/dynamic analysis tool for Xposed modules written
-in Python 3. The main executable is located in `src/deckard.py`.
+in Python 3. The main executable is located in `src/deckard.py`. The
+native library logging hooks via dynamic analysis is located in
+`hooklib`, which also contains scripts to provision a pre-configured
+emulator in `hooklib/emulator`.
 
 ## Usage
 
@@ -24,7 +27,9 @@ usage: src/deckard.py <static|dynamic|show> <path_to.apk|path_to.report>
 - Docker (for dynamic analysis)
 
 In order to use Deckard, required third party Python modules can be
-installed to a virtual environment using `setup.sh`.
+installed to a virtual environment using `setup.sh`. The setup script
+will also run `yarn install` to download the necessary dependencies
+for the web UI (Bootstrap, jQuery, etc.).
 
 A wrapper `deckard.sh` is provided to execute Deckard within this
 virtual environment.
@@ -55,7 +60,7 @@ to stop the container and save the report.
 
 ### Dynamic Analysis using a real device/custom emulator
 
-If you'd like to perform dynamic analysis on a real device other with
+If you'd like to perform dynamic analysis on a real device or with
 custom emulator setups, additional setup steps are required:
 
 - The Android SDK and NDK need to be installed
@@ -77,7 +82,6 @@ custom emulator setups, additional setup steps are required:
     target device, e.g. to `/system/lib/libdeckard.so`
   - `libdeckard.so` needs to be preloaded before Zygote, e.g. by
     setting the environment variable in the Zygote service
-    configuration. On an Android emulator device `echo " setenv
-    LD_PRELOAD /system/lib/libdeckard.so" >> /init.zygote32.rc` can be
-    executed in an *adb shell* running as root.
+    configuration. Usually, adding `setenv LD_PRELOAD
+    /system/lib/libdeckard.so` to /init.zygote32.rc is sufficient.
 - Reboot the device and pipe the logcat output to Deckard.
