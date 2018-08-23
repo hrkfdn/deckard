@@ -24,7 +24,7 @@ then
     curl -qo "$SCRIPTPATH/xposed.apk" "$XPOSED_URL"
 fi
 
-cp $SCRIPTPATH/../libs/x86/libdeckard.so ./libdeckard.so
+cp $SCRIPTPATH/../libs/x86/libdeckard.so $SCRIPTPATH/libdeckard.so
 
 #docker build --no-cache -t deckard/emulator .
 docker build -t deckard/emulator $SCRIPTPATH
