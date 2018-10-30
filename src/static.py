@@ -63,7 +63,7 @@ def analyze_method(method):
 
             if type(resolve_identifier(ctx, inv.params[-1])) is astparse.Parameter:
                 hook_obj = resolve_identifier(ctx, inv.params[-1])
-            elif type(inv.params[-1]) is not astparse.ClassInstanceCreation:
+            elif type(inv.params[-1]) not in [astparse.ClassInstanceCreation, astparse.FieldAccess]:
                 # hook objects are passed as an Object array of N elements.
                 # where N-1 elements are the classes of the target function's parameters
                 # and the last/N-th element contains the XC_MethodHook instance, which
