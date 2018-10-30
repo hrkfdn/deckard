@@ -7,5 +7,5 @@ if [ ! -d "venv" ]; then
     exit 1
 fi
 
-source venv/bin/activate
+. venv/bin/activate
 python3 src/deckard.py $@
