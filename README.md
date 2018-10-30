@@ -20,6 +20,13 @@ usage: src/deckard.py <static|dynamic|show> <path_to.apk|path_to.report>
   instructions.
 - `show` opens a report file in the web GUI.
 
+## Screenshots
+
+Deckard in action analyzing GravityBox:
+
+[![overview](/screenshots/overview-th.png?raw=true)](/screenshots/overview.png?raw=true)
+[![hook detail](/screenshots/detail-th.png?raw=true)](/screenshots/detail.png?raw=true)
+
 ## Requirements
 
 - Python 3
