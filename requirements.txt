@@ -5,7 +5,7 @@ backcall==0.1.0
 cffi==1.11.5
 click==6.7
 colorama==0.3.9
-cryptography==2.5
+cryptography==3.2
 cycler==0.10.0
 decorator==4.3.0
 Flask==1.0.2
